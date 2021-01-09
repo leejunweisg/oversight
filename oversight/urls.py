@@ -21,6 +21,7 @@ from users import views as user_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', user_views.register, name='register'),
-    path('login/', user_views.LoginFormView.as_view(), name='login'), # built-in class-based views
+    path('login/', user_views.LoginFormView.as_view(extra_context={'title': 'login'}), name='login'), # built-in class-based views
+    path('logout/', user_views.LogoutFormView.as_view(), name='logout'),
     path('', include('engine.urls')) # includes urls file from engine app
 ]

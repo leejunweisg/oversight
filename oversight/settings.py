@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'oversight',
     'engine',
     'users',
@@ -123,5 +124,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# override default redirect after login
+# set default login page (for @login_required decorator)
+LOGIN_URL = 'login'
+
+# override default redirect after login/logout
 LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'dashboard'
