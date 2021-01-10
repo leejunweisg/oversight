@@ -12,12 +12,12 @@ def log(msg):
 
 # Create your views here.
 @login_required
-def dashboard(request):
+def dashboard(request): 
     log("--- Dashboard ---")
 
     # if user is authenticated
     if request.user.is_authenticated:
-        print(f"--- User: {request.user.username} ---")
+        print(f"User: {request.user.username}")
 
         # get user
         user = request.user

@@ -1,27 +1,114 @@
-{% extends "users/base.html" %}
-{% load crispy_forms_tags %}
-{% block content %}
-    <div class="content-section">
+{% load static %}
 
-        <!-- Register form -->
-        <form method="POST">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend "border-bottom mb-4">Register</legend>
-                {{ form|crispy }}
-            </fieldset>
+<!DOCTYPE html>
+<html lang="en">
 
-            <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Sign up</button>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Oversight - Register</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href={% static 'assets/vendors/mdi/css/materialdesignicons.min.css' %}>
+    <link rel="stylesheet" href={% static 'assets/vendors/css/vendor.bundle.base.css' %}>
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href={% static 'assets/css/style.css' %}>
+    <!-- End layout styles -->
+    <link rel="shortcut icon" href={% static 'assets/images/favicon.png' %} />
+</head>
+
+<body>
+    <div class="container-scroller">
+        <div class="container-fluid page-body-wrapper full-page-wrapper">
+            <div class="row w-100 m-0">
+                <div class="content-wrapper full-page-wrapper d-flex align-items-center auth login-bg">
+                    <div class="card col-lg-4 mx-auto">
+                        <div class="card-body px-5 py-5">
+                            <h2 class="card-title text-left mb-5">Register</h2>
+
+                            <form method="POST">
+
+                                {% csrf_token %}
+
+                                <!-- Username -->
+                                <div class="form-group">
+                                    <label>Username*</label>
+                                    <input type="text" class="form-control p_input" name="username" {% if form.username.value %}value="{{form.username.value}}" {% endif %}>
+                                </div>
+                                {% if form.username.errors %}
+                                    <p class="alert alert-danger p-1">
+                                    {% for error in form.username.errors %}
+                                        {{ error|escape }}<br>
+                                    {% endfor %}
+                                    </p>
+                                {% endif %}
+
+                                <!-- Email -->
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="text" class="form-control p_input" name="email" {% if form.email.value %}value="{{form.email.value}}" {% endif %}>
+                                </div>
+                                {% if form.email.errors %}
+                                    <p class="alert alert-danger p-1">
+                                    {% for error in form.email.errors %}
+                                        {{ error|escape }}<br>
+                                    {% endfor %}
+                                    </p>
+                                {% endif %}
+                                
+                                <!-- Password -->
+                                <div class="form-group">
+                                    <label>Password *</label>
+                                    <input type="password" class="form-control p_input" name="password1" required>
+                                </div>
+                                <!-- Confirm Password -->
+                                <div class="form-group">
+                                    <label>Confirm Password *</label>
+                                    <input type="password" class="form-control p_input" name="password2" required>
+                                </div>
+                                {% if form.password2.errors %}
+                                    <p class="alert alert-danger p-1">
+                                    {% for error in form.password2.errors %}
+                                        {{ error|escape }}<br>
+                                    {% endfor %}
+                                    </p>
+                                {% endif %}
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-block enter-btn mt-4"
+                                        value="login">Register</button>
+                                </div>
+
+                                <p class="sign-up">Already have an Account?<a href="{% url 'login' %}"> Sign In</a></p>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- content-wrapper ends -->
             </div>
-        </form>
-
-        <!-- Already have an account?-->
-        <div class="border-top pt-3">
-            <small class="text=muted">
-                Already have an account? <a class="ml-2" href="{% url 'login' %">Sign In</a>
-            </small>
+            <!-- row ends -->
         </div>
+        <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <!-- plugins:js -->
+    <script src={% static 'assets/vendors/js/vendor.bundle.base.js' %}></script>
+    <!-- endinject -->
+    <!-- Plugin js for this page -->
+    <!-- End plugin js for this page -->
+    <!-- inject:js -->
+    <script src={% static 'assets/js/off-canvas.js' %}></script>
+    <script src={% static 'assets/js/hoverable-collapse.js' %}></script>
+    <script src={% static 'assets/js/misc.js' %}></script>
+    <script src={% static 'assets/js/settings.js' %}></script>
+    <script src={% static 'assets/js/todolist.js' %}></script>
+    <!-- endinject -->
+</body>
 
-    </div>  
-{% endblock content %}
+</html>

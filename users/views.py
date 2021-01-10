@@ -8,6 +8,11 @@ from django.contrib.auth.views import LoginView, LogoutView
 # Create your views here.
 
 def register(request):
+    # if user is already signed in, redirect back to dashboard
+    if request.user.is_authenticated:
+        messages.success(request, f"You are already signed in!")
+        return redirect('dashboard')
+
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
 
@@ -26,6 +31,12 @@ class LoginFormView(SuccessMessageMixin, LoginView):
     template_name='users/login.html'
     success_message = f"Welcome, you are successfully logged in!"
 
+    def get(self, request, *args, **kwargs):
+        # if user is already signed in, redirect back to dashboard
+        if request.user.is_authenticated:
+            messages.success(request, f"You are already signed in!")
+            return redirect('dashboard')
+        return super().get(request, *args, **kwargs)
 
 class LogoutFormView(SuccessMessageMixin, LogoutView):
     success_message = f"You have been successfully logged out!"
