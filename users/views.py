@@ -3,6 +3,7 @@ from django.contrib import messages
 from .forms import UserRegisterForm, UserUpdateForm #, ProfileUpdateForm
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.models import User
 
 
 # Create your views here.
@@ -16,11 +17,13 @@ def register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
 
-        if form.is_valid():
+        if form.is_valid() and not User.objects.filter(email=form.cleaned_data.get('email')).exists():
             form.save()
             username = form.cleaned_data.get('username')
             messages.success(request, f"Your account has been created! Please sign in!", )
             return redirect("login")
+        else:
+            return render(request, 'users/register.html', {'form': form})
     else:
         form = UserRegisterForm()
 

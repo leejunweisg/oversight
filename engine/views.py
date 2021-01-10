@@ -2,13 +2,12 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import Stock
-from .logic import portfolio_value, original_portfolio_value, get_complete_holdings
+from .logic import parse_holdings, get_site_data
 
 DEBUG = True
 def log(msg):
     if DEBUG:
         print(msg)
-
 
 # Create your views here.
 @login_required
@@ -21,31 +20,19 @@ def dashboard(request):
 
         # get user
         user = request.user
+
+        # retrieve user's stocks from model
         stocks = Stock.objects.filter(owner=user).order_by('-date').values()
 
-        # get complete holdings
-        holdings = get_complete_holdings(stocks)
+        # parse complete holdings from queryset
+        holdings = parse_holdings(stocks)
 
-        # calculate portfolio values
-        portfolio_val = portfolio_value(holdings)
-        original_portfolio_val = original_portfolio_value(holdings)
-        percentage_chng = ((portfolio_val-original_portfolio_val)/original_portfolio_val) * 100
-        
-        # pie chart data
-        pie={}
-        test = []
-        test = [x['symbol'] for x in stocks if x['symbol']]
-        pie['labels'] = test
-        pie['data'] = [1,2,3]
+        # get calculated data (total gain, day's gain etc)
+        context = get_site_data(holdings)
 
         # data to pass into template
-        context = {
-            'portfolio_value': portfolio_val,
-            'original_portfolio_value': original_portfolio_val,
-            'percentage_change': percentage_chng,
-            'stocks_list': holdings,
-            'chart': pie
-        }
+        context['stocks_list'] = holdings
+
 
     else:
         # empty data to pass into template
@@ -55,8 +42,10 @@ def dashboard(request):
             'percentage_change': 0
         }
 
-
-
     # render template
     print("----------------")
     return render(request, 'engine/dashboard.html', context)
+
+
+def dashboard_refresh(request):
+    pass
