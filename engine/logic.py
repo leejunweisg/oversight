@@ -56,13 +56,17 @@ def parse_holdings(portfolio):
     return holdings # type: list of dictionaries
 
 
+def group_stocks(stocks_list):
+
+
+
 # returns the current portfolio market value (adds up market value column)
 # does conversion of currency to a defined base currency as well
-def get_current_value(holdings, base_currency="USD"):
+def get_current_value(stocks_list, base_currency="USD"):
     c = CurrencyRates()
 
     total = 0
-    for x in holdings:
+    for x in stocks_list:
         if base_currency != x['currency']:
             converted = c.convert(x['currency'], base_currency, x['marketvalue'])
             total += converted
@@ -72,11 +76,11 @@ def get_current_value(holdings, base_currency="USD"):
     return total
 
 
-def get_yest_value(holdings, base_currency="USD"):
+def get_yest_value(stocks_list, base_currency="USD"):
     c = CurrencyRates()
 
     total = 0
-    for x in holdings:
+    for x in stocks_list:
         if base_currency != x['currency']:
             converted = c.convert(x['currency'], base_currency, x['yestvalue'])
             total += converted
@@ -87,11 +91,11 @@ def get_yest_value(holdings, base_currency="USD"):
 
 # returns the original value of the portfolio (price executed x # of shares)
 # market value only, does not include fees
-def get_original_value(holdings, base_currency="USD"):
+def get_original_value(stocks_list, base_currency="USD"):
     c = CurrencyRates()
 
     total = 0
-    for x in holdings:
+    for x in stocks_list:
         value = x['price'] * x['shares']
         if base_currency != x['currency']:
             converted = c.convert(x['currency'], base_currency, value)
@@ -104,11 +108,11 @@ def get_original_value(holdings, base_currency="USD"):
 
 # returns the total fees paid in all trades
 # does conversion of currency to a defined base currency as well
-def get_total_fees(holdings, base_currency="USD"):
+def get_total_fees(stocks_list, base_currency="USD"):
     c = CurrencyRates()
 
     total = 0
-    for x in holdings:
+    for x in stocks_list:
         if base_currency != x['currency']:
             converted = c.convert(x['currency'], base_currency, x['fees'])
             total += converted
@@ -118,16 +122,16 @@ def get_total_fees(holdings, base_currency="USD"):
     return total
 
 
-def get_site_data(holdings, base_currency="USD"):
+def get_site_data(stocks_list, base_currency="USD"):
     # get currency symbol
     c = CurrencyCodes()
     currency_sym = c.get_symbol(base_currency)
 
     # calculate portfolio values
-    current_portfolio_value = get_current_value(holdings, base_currency)
-    original_portfolio_value = get_original_value(holdings, base_currency)
-    yest_portfolio_value = get_yest_value(holdings, base_currency)
-    total_fees = get_total_fees(holdings, base_currency)
+    current_portfolio_value = get_current_value(stocks_list, base_currency)
+    original_portfolio_value = get_original_value(stocks_list, base_currency)
+    yest_portfolio_value = get_yest_value(stocks_list, base_currency)
+    total_fees = get_total_fees(stocks_list, base_currency)
 
     # total change (including fees)
     total_change = current_portfolio_value-original_portfolio_value-total_fees
@@ -137,6 +141,7 @@ def get_site_data(holdings, base_currency="USD"):
     day_change = current_portfolio_value - yest_portfolio_value
     day_change_p = (day_change/yest_portfolio_value) * 100
 
+    # data for summary section of dashboard
     data = {
         'portfolio_value': f"{currency_sym} {current_portfolio_value:,.2f}",
         'total_change': f"{currency_sym} {total_change:,.2f}",

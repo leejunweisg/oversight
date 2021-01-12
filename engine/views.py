@@ -2,7 +2,7 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .models import Stock
-from .logic import parse_holdings, get_site_data, stringify
+from .logic import parse_holdings, get_site_data, stringify, group_stocks
 from datetime import datetime
 
 DEBUG = True
@@ -22,16 +22,17 @@ def dashboard_refresh(request):
         user = request.user
 
         # retrieve user's stocks from model
-        stocks = Stock.objects.filter(owner=user).order_by('-date').values()
+        stocks = list(Stock.objects.filter(owner=user).order_by('-date').values())
 
         # parse complete holdings from queryset
-        holdings = parse_holdings(stocks)
+        stocks_list = parse_holdings(stocks)
 
-        # get calculated data (total gain, day's gain etc)
-        context = get_site_data(holdings)
+        # get summary data (total gain, day's gain etc)
+        context = get_site_data(stocks_list)
 
-        # data to pass into template
-        context['stocks_list'] = stringify(holdings)
+        # add 'stock_list' data to context as well
+        context['stocks_list'] = stringify(stocks_list)
+        context['grouped_list'] = group_stocks(stocks_list)
 
         # return json response
         return JsonResponse(context, status=200, safe=False)
