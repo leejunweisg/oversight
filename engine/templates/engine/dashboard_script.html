@@ -1,0 +1,19 @@
+<!-- AJAX -->
+<script>
+    $(document).ready(function(){
+        setInterval ( ajax_refresh, 1000 ); // ajax_refresh every 10 seconds
+        
+        function ajax_refresh(){
+            $.ajax({
+            url: '{% url "dashboard-refresh" %}',
+            type: 'get',
+            data: {},
+            success: function(response){
+                $("#btn-edit").text(response.time)
+            }
+            });
+        }
+        
+        });
+
+</script>

@@ -1,7 +1,12 @@
 from yahoo_fin import stock_info
 import yfinance as yf
-from forex_python.converter import CurrencyRates
+from forex_python.converter import CurrencyRates, CurrencyCodes
+import numpy as np
 
+DEBUG = True
+def log(msg):
+    if DEBUG:
+        print(msg)
 
 # parse query set into a list of dictionaries with additional columns
 # (avg price per share, market value, dailygain, totalgain)
@@ -9,18 +14,15 @@ def parse_holdings(portfolio):
     holdings = []
 
     # get all unique tickers in portfolio
-    tickers = []
+    tickers = set()
     for stock in portfolio:
-        symbol = stock.get('symbol')
-        if symbol not in tickers:
-            tickers.append(symbol)
+        tickers.add(stock['symbol'])
 
-    print("Tickers found.")
+    log("Tickers found.")
 
     # get price of all tickers
-    data = yf.download(' '.join(tickers), period='1d', progress=False)
-
-    print("Prices downloaded.")
+    data = yf.download(' '.join(tickers), period='2d', progress=False)
+    log("Prices downloaded.")
 
     # construct holdings dataframe
     for stock in portfolio:
@@ -28,9 +30,19 @@ def parse_holdings(portfolio):
 
         symbol = stock.get('symbol').upper()
         executedprice = stock.get('price')
-        currentprice = data['Close'][symbol].values[1]
-        yestprice = data['Close'][symbol].values[0]
+        
+        # if only one ticker, get data differently
+        if len(tickers) == 1:
+            currentprice = data['Close'].values[1]
+            yestprice = data['Close'].values[0]
+        # drop NaN values as well (market open differences)
+        else:
+            temp = data['Close'][symbol]
+            temp = temp[~np.isnan(data['Close'][symbol])]
+            currentprice = temp[1]
+            yestprice = temp[0]
 
+        # add additional key-val to dict
         stock['avg'] = (executedprice * stock.get('shares') + stock.get('fees')) / stock.get('shares')
         stock['marketvalue'] = stock.get('shares') * currentprice
         stock['yestvalue'] = stock.get('shares') * yestprice
@@ -40,7 +52,7 @@ def parse_holdings(portfolio):
         stock['total_p'] = (currentprice - executedprice)/executedprice * 100
 
     # return complete holdings
-    print("Completed parsing.")
+    log("Completed parsing.")
     return holdings # type: list of dictionaries
 
 
@@ -107,6 +119,10 @@ def get_total_fees(holdings, base_currency="USD"):
 
 
 def get_site_data(holdings, base_currency="USD"):
+    # get currency symbol
+    c = CurrencyCodes()
+    currency_sym = c.get_symbol(base_currency)
+
     # calculate portfolio values
     current_portfolio_value = get_current_value(holdings, base_currency)
     original_portfolio_value = get_original_value(holdings, base_currency)
@@ -122,11 +138,22 @@ def get_site_data(holdings, base_currency="USD"):
     day_change_p = (day_change/yest_portfolio_value) * 100
 
     data = {
-        'portfolio_value': current_portfolio_value,
-        'total_change': total_change,
-        'total_change_p': total_change_p,
-        'day_change': day_change,
-        'day_change_p': day_change_p
-    }    
+        'portfolio_value': f"{currency_sym} {current_portfolio_value:,.2f}",
+        'total_change': f"{currency_sym} {total_change:,.2f}",
+        'total_change_p': f"{total_change_p:+.2f}",
+        'day_change': f"{currency_sym} {day_change:,.2f}",
+        'day_change_p': f"{day_change_p:+.2f}"
+    }
 
     return data
+
+def stringify(holdings):
+    for stock in holdings:
+        stock['avg'] = f"{stock['avg']:.2f}"
+        stock['marketvalue'] = f"{stock['marketvalue']:,.2f}"
+        stock['yestvalue'] = f"{stock['yestvalue']:,.2f}"
+        stock['dailygain'] = f"{stock['dailygain']:+,.2f}"
+        stock['daily_p'] = f"{stock['daily_p']:+.2f}"
+        stock['totalgain'] = f"{stock['totalgain']:+,.2f}"
+        stock['total_p'] = f"{stock['total_p']:+.2f}"
+    return holdings

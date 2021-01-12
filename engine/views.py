@@ -1,8 +1,9 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import Stock
-from .logic import parse_holdings, get_site_data
+from .logic import parse_holdings, get_site_data, stringify
+from datetime import datetime
 
 DEBUG = True
 def log(msg):
@@ -12,12 +13,11 @@ def log(msg):
 # Create your views here.
 @login_required
 def dashboard(request): 
-    log("--- Dashboard ---")
+    context={}
+    return render(request, 'engine/dashboard.html', context)
 
-    # if user is authenticated
-    if request.user.is_authenticated:
-        print(f"User: {request.user.username}")
-
+def dashboard_refresh(request):
+    if request.is_ajax():
         # get user
         user = request.user
 
@@ -31,21 +31,7 @@ def dashboard(request):
         context = get_site_data(holdings)
 
         # data to pass into template
-        context['stocks_list'] = holdings
+        context['stocks_list'] = stringify(holdings)
 
-
-    else:
-        # empty data to pass into template
-        context = {
-            'portfolio_value': 0,
-            'original_portfolio_value': 0,
-            'percentage_change': 0
-        }
-
-    # render template
-    print("----------------")
-    return render(request, 'engine/dashboard.html', context)
-
-
-def dashboard_refresh(request):
-    pass
+        # return json response
+        return JsonResponse(context, status=200, safe=False)
