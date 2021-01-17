@@ -1,63 +1,81 @@
-from yahoo_fin import stock_info
-import yfinance as yf
 from forex_python.converter import CurrencyRates, CurrencyCodes
-import numpy as np
+import requests
+import pandas as pd
 
 DEBUG = True
 def log(msg):
     if DEBUG:
         print(msg)
 
+# this function retrieves price data from yahoo finance
+# retrieves current close, and previous close
+def get_prices(symbols):
+    # retrieve data from yahoo finance
+    url = "https://query1.finance.yahoo.com/v8/finance/spark?symbols={}".format(','.join(symbols))
+    params={}
+    params['range']='1d'
+    params['interval']='1d'
+    params['indicators']='close'
+    params['includePrePost']='true'
+    params['corsDomain']='finance.yahoo.com'
+    data = requests.get(url=url, params=params)
+
+    # clean data and construct dataframe
+    cleaned_data = []
+    for k, v in data.json().items():
+        temp={}
+        temp['symbol'] = k
+        temp['close'] = v['close'][-1]
+        temp['prevclose'] = v['chartPreviousClose']
+        cleaned_data.append(temp)
+    df = pd.DataFrame(cleaned_data)
+
+    # return
+    return df
+
 # parse query set into a list of dictionaries with additional columns
 # (avg price per share, market value, dailygain, totalgain)
 def parse_holdings(portfolio):
-    holdings = []
-
     # get all unique tickers in portfolio
-    tickers = set()
-    for stock in portfolio:
-        tickers.add(stock['symbol'])
-
-    log("Tickers found.")
+    symbols = set([x['symbol'] for x in portfolio])
+    log(f"Symbols retrieved: {', '.join(symbols)}")
 
     # get price of all tickers
-    data = yf.download(' '.join(tickers), period='2d', progress=False)
-    log("Prices downloaded.")
+    price_df = get_prices(symbols)
+    log("Prices downloaded!")
 
     # construct holdings dataframe
-    for stock in portfolio:
-        holdings.append(stock)
+    holdings_df = pd.DataFrame(portfolio)
+    
+    # merge downloaded prices into holdings_df
+    holdings_df = pd.merge(holdings_df, price_df, on='symbol')
+    holdings_df['avg'] = (holdings_df['shares']*holdings_df['price']+holdings_df['fees'])/holdings_df['shares']
+    holdings_df['marketvalue'] = holdings_df['shares'] * holdings_df['close']
+    holdings_df['yestvalue'] = holdings_df['shares'] * holdings_df['prevclose']
+    holdings_df['dailygain'] = (holdings_df['close'] - holdings_df['prevclose']) * holdings_df['shares']
+    holdings_df['daily_p'] = ((holdings_df['close'] - holdings_df['prevclose'])/holdings_df['prevclose']) * 100
+    holdings_df['totalgain'] = ((holdings_df['close'] - holdings_df['price']) * holdings_df['shares']) - holdings_df['fees']
+    holdings_df['total_p'] = ((holdings_df['close'] - holdings_df['price'])/holdings_df['price']) *100
 
-        symbol = stock.get('symbol').upper()
-        executedprice = stock.get('price')
-        
-        # if only one ticker, get data differently
-        if len(tickers) == 1:
-            currentprice = data['Close'].values[1]
-            yestprice = data['Close'].values[0]
-        # drop NaN values as well (market open differences)
-        else:
-            temp = data['Close'][symbol]
-            temp = temp[~np.isnan(data['Close'][symbol])]
-            currentprice = temp[1]
-            yestprice = temp[0]
-
-        # add additional key-val to dict
-        stock['avg'] = (executedprice * stock.get('shares') + stock.get('fees')) / stock.get('shares')
-        stock['marketvalue'] = stock.get('shares') * currentprice
-        stock['yestvalue'] = stock.get('shares') * yestprice
-        stock['dailygain'] = (currentprice - yestprice) * stock.get('shares')
-        stock['daily_p'] = (currentprice - yestprice)/yestprice * 100
-        stock['totalgain'] = (currentprice - executedprice) * stock.get('shares') - stock.get('fees')
-        stock['total_p'] = (currentprice - executedprice)/executedprice * 100
-
+    # created grouped_df for grouped table
+    grouped_df = pd.DataFrame(columns=['symbol', 'shares', 'avgprice', 'avgcost', 'marketvalue', 'dailygain', 'daily_p','totalgain', 'total_p'])
+    for sym in symbols:
+        filtered = holdings_df[holdings_df['symbol']==sym]
+        row = {}
+        row['symbol'] = sym
+        row['shares'] = filtered['shares'].sum()
+        row['avgprice'] = (filtered['shares'] * filtered['price']).sum() / filtered['shares'].sum()
+        row['avgcost'] = (filtered['shares'] * filtered['price'] + filtered['fees']).sum() / filtered['shares'].sum()
+        row['marketvalue'] = filtered['shares'].sum() * filtered['close'].sum()
+        row['dailygain'] = ((filtered['close'] - filtered['prevclose']) * filtered['shares']).sum()
+        row['daily_p'] = (((filtered['close']*filtered['shares']).sum() - (filtered['prevclose']*filtered['shares']).sum())/(filtered['prevclose']*filtered['shares']).sum()) * 100
+        row['totalgain'] = ((filtered['close'] - filtered['price']) * filtered['shares']).sum() - filtered['fees'].sum()
+        row['total_p'] = (row['totalgain']/(filtered['price'] * filtered['shares']).sum()) *100
+        grouped_df = grouped_df.append(row, ignore_index=True)
+    
     # return complete holdings
     log("Completed parsing.")
-    return holdings # type: list of dictionaries
-
-
-def group_stocks(stocks_list):
-
+    return holdings_df.to_dict('records'), grouped_df.to_dict('records') # type: list of dictionaries
 
 
 # returns the current portfolio market value (adds up market value column)
@@ -88,6 +106,7 @@ def get_yest_value(stocks_list, base_currency="USD"):
             total += x['yestvalue']
 
     return total
+
 
 # returns the original value of the portfolio (price executed x # of shares)
 # market value only, does not include fees
@@ -122,7 +141,7 @@ def get_total_fees(stocks_list, base_currency="USD"):
     return total
 
 
-def get_site_data(stocks_list, base_currency="USD"):
+def get_summary_data(stocks_list, base_currency="SGD"):
     # get currency symbol
     c = CurrencyCodes()
     currency_sym = c.get_symbol(base_currency)
@@ -152,13 +171,24 @@ def get_site_data(stocks_list, base_currency="USD"):
 
     return data
 
-def stringify(holdings):
-    for stock in holdings:
-        stock['avg'] = f"{stock['avg']:.2f}"
-        stock['marketvalue'] = f"{stock['marketvalue']:,.2f}"
-        stock['yestvalue'] = f"{stock['yestvalue']:,.2f}"
-        stock['dailygain'] = f"{stock['dailygain']:+,.2f}"
-        stock['daily_p'] = f"{stock['daily_p']:+.2f}"
-        stock['totalgain'] = f"{stock['totalgain']:+,.2f}"
-        stock['total_p'] = f"{stock['total_p']:+.2f}"
-    return holdings
+def stringify1(holdings_table):
+    for stock in holdings_table:
+        stock['avg'] = f"{stock['avg']:,.02f}"
+        stock['marketvalue'] = f"{stock['marketvalue']:,.02f}"
+        stock['yestvalue'] = f"{stock['yestvalue']:,.02f}"
+        stock['dailygain'] = f"{stock['dailygain']:+,.02f}"
+        stock['daily_p'] = f"{stock['daily_p']:+,.02f}"
+        stock['totalgain'] = f"{stock['totalgain']:+,.02f}"
+        stock['total_p'] = f"{stock['total_p']:+,.02f}"
+    return holdings_table
+
+def stringify2(grouped_table):
+    for stock in grouped_table:
+        stock['avgprice'] = f"{stock['avgprice']:,.02f}"
+        stock['avgcost'] = f"{stock['avgcost']:,.02f}"
+        stock['marketvalue'] = f"{stock['marketvalue']:,.02f}"
+        stock['dailygain'] = f"{stock['dailygain']:+,.02f}"
+        stock['daily_p'] = f"{stock['daily_p']:+,.02f}"
+        stock['totalgain'] = f"{stock['totalgain']:+,.02f}"
+        stock['total_p'] = f"{stock['total_p']:+,.02f}"
+    return grouped_table
