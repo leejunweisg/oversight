@@ -21,10 +21,20 @@ def dashboard_refresh(request):
     if request.is_ajax():
         # get user
         user = request.user
+        sort_option = request.GET.get('sort').strip()
         base_currency = 'USD'
-        
+
+        # date sort
+        if sort_option == "1":
+            s = '-date'
+        # symbol sort
+        elif sort_option == "2":
+            s = 'symbol'
+        else:
+            s = '-date'
+
         # retrieve user's stocks from model
-        stocks = list(Stock.objects.filter(owner=user).order_by('-date').values())
+        stocks = list(Stock.objects.filter(owner=user).order_by(s).values())
 
         # if no holdings, return empty=1
         if len(stocks) == 0:

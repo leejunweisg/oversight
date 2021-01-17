@@ -233,7 +233,16 @@
                   <h4 class="card-title">Your Holdings
                     <i class="mdi mdi-information-outline" data-toggle="tooltip" data-placement="top"
                       title="Prices displayed in holding's base currency"></i>
+
+                        <button class="float-right btn btn-sm btn-dark dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" value="1">Sort</button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                          <button class="dropdown-item active" value="1">Date</button>
+                          <button class="dropdown-item" value="2">Symbol</button>
+                          <button class="dropdown-item" value="3">Total Gain</button>
+                        </div>
+          
                   </h4>
+                  
                   <div class="table-responsive">
                     <table class="table">
                       <thead>
@@ -336,14 +345,26 @@
   <script>
     $(document).ready(function () {
       ajax_refresh();
-      setInterval(ajax_refresh, 5000); // ajax_refresh every 10 seconds
+      setInterval(ajax_refresh, 10000); // ajax_refresh every 10 seconds
+
+      $(".dropdown-item").click(function(){
+        // set value
+        $("#dropdownMenuButton").text($(this).text());
+        $("#dropdownMenuButton").val($(this).val());
+        // set active class
+        $(".dropdown-item").removeClass("active");
+        $(this).addClass("active");
+
+        // force a refresh
+        ajax_refresh();
+      });
 
       function ajax_refresh() {
 
         $.ajax({
           url: '{% url "dashboard-refresh" %}',
           type: 'get',
-          data: {},
+          data: {'sort': $("#dropdownMenuButton").val()},
           success: function (response) {
             
             // if user has no stocks, do nothing
