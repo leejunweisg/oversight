@@ -21,27 +21,19 @@ def dashboard_refresh(request):
     if request.is_ajax():
         # get user
         user = request.user
-        sort_option = request.GET.get('sort').strip()
-        base_currency = 'USD'
-
-        # date sort
-        if sort_option == "1":
-            s = '-date'
-        # symbol sort
-        elif sort_option == "2":
-            s = 'symbol'
-        else:
-            s = '-date'
+        base_currency = 'SGD'
+        sort_holdings =  request.GET.get("sort_holdings")
+        sort_lots = request.GET.get("sort_lots")
 
         # retrieve user's stocks from model
-        stocks = list(Stock.objects.filter(owner=user).order_by(s).values())
+        stocks = list(Stock.objects.filter(owner=user).order_by('-date').values())
 
         # if no holdings, return empty=1
         if len(stocks) == 0:
             return JsonResponse({'empty': 1}, status=200, safe=False)
 
         # parse complete holdings from queryset
-        holdings_table, grouped_table = parse_holdings(stocks)
+        holdings_table, grouped_table = parse_holdings(stocks, sort_holdings, sort_lots)
 
         # get summary data (total gain, day's gain etc)
         context = get_summary_data(holdings_table, base_currency)

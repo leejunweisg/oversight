@@ -7,7 +7,7 @@ from django.utils import timezone
 class Stock(models.Model):
     date = models.DateField(default=timezone.now)
     symbol = models.CharField(max_length=10) # assume max length 10
-    shares = models.IntegerField()
+    shares = models.FloatField()
     price = models.FloatField()
     fees = models.FloatField()
     currency = models.CharField(max_length=5, default="USD")

@@ -1,4 +1,4 @@
-from forex_python.converter import CurrencyRates, CurrencyCodes
+from forex_python.converter import CurrencyCodes
 import requests
 import pandas as pd
 
@@ -33,9 +33,17 @@ def get_prices(symbols):
     # return
     return df
 
+# this function retrieves currency rates data
+# gets quotes against a base currency
+def get_rates(base):
+    url = "https://api.exchangerate.host/latest?base={}".format(base)
+    data = requests.get(url=url)
+    return data.json()['rates']
+
+
 # parse query set into a list of dictionaries with additional columns
 # (avg price per share, market value, dailygain, totalgain)
-def parse_holdings(portfolio):
+def parse_holdings(portfolio, sort_holdings, sort_lots):
     # get all unique tickers in portfolio
     symbols = set([x['symbol'] for x in portfolio])
     log(f"Symbols retrieved: {', '.join(symbols)}")
@@ -63,6 +71,8 @@ def parse_holdings(portfolio):
         filtered = holdings_df[holdings_df['symbol']==sym]
         row = {}
         row['symbol'] = sym
+        row['change'] = filtered['close'].iloc[0] - filtered['prevclose'].iloc[0]
+        row['change_p'] = ((filtered['close'].iloc[0] - filtered['prevclose'].iloc[0])/filtered['prevclose'].iloc[0])*100
         row['shares'] = filtered['shares'].sum()
         row['avgprice'] = (filtered['shares'] * filtered['price']).sum() / filtered['shares'].sum()
         row['avgcost'] = (filtered['shares'] * filtered['price'] + filtered['fees']).sum() / filtered['shares'].sum()
@@ -73,6 +83,30 @@ def parse_holdings(portfolio):
         row['total_p'] = (row['totalgain']/(filtered['price'] * filtered['shares']).sum()) *100
         grouped_df = grouped_df.append(row, ignore_index=True)
     
+    # sort holdings
+    if sort_holdings == "2":
+        grouped_df.sort_values("avgprice", inplace=True, ascending=False)
+    elif sort_holdings == "3":
+        grouped_df.sort_values("avgcost", inplace=True, ascending=False)
+    elif sort_holdings == "4":
+        grouped_df.sort_values("marketvalue", inplace=True, ascending=False)
+    elif sort_holdings == "5":
+        grouped_df.sort_values("dailygain", ascending=False, inplace=True)
+    elif sort_holdings == "6":
+        grouped_df.sort_values("totalgain", ascending=False, inplace=True)
+    else:
+         grouped_df.sort_values("symbol", inplace=True)
+
+    # sort lots
+    if sort_lots == "2":
+        holdings_df.sort_values("symbol", inplace=True)
+    elif sort_lots == "3":
+        holdings_df.sort_values("marketvalue", ascending=False, inplace=True)
+    elif sort_lots == "4":
+        holdings_df.sort_values("dailygain", ascending=False, inplace=True)
+    elif sort_lots == "5":
+        holdings_df.sort_values("totalgain", ascending=False, inplace=True)
+
     # return complete holdings
     log("Completed parsing.")
     return holdings_df.to_dict('records'), grouped_df.to_dict('records') # type: list of dictionaries
@@ -80,77 +114,69 @@ def parse_holdings(portfolio):
 
 # returns the current portfolio market value (adds up market value column)
 # does conversion of currency to a defined base currency as well
-def get_current_value(stocks_list, base_currency="USD"):
-    c = CurrencyRates()
-
+def get_current_value(stocks_list, base_currency, currency_rates):
     total = 0
     for x in stocks_list:
         if base_currency != x['currency']:
-            converted = c.convert(x['currency'], base_currency, x['marketvalue'])
+            converted = x['marketvalue'] / currency_rates[x['currency']]
             total += converted
         else:
             total += x['marketvalue']
-
     return total
 
-
-def get_yest_value(stocks_list, base_currency="USD"):
-    c = CurrencyRates()
-
+# returns yesterday's portfolio market value (adds up yestvalue column)
+# does conversion of currency to a defined base currency as well
+def get_yest_value(stocks_list, base_currency, currency_rates):
     total = 0
     for x in stocks_list:
         if base_currency != x['currency']:
-            converted = c.convert(x['currency'], base_currency, x['yestvalue'])
+            converted = x['yestvalue'] / currency_rates[x['currency']]
             total += converted
         else:
             total += x['yestvalue']
-
     return total
 
 
 # returns the original value of the portfolio (price executed x # of shares)
 # market value only, does not include fees
-def get_original_value(stocks_list, base_currency="USD"):
-    c = CurrencyRates()
-
+def get_original_value(stocks_list, base_currency, currency_rates):
     total = 0
     for x in stocks_list:
         value = x['price'] * x['shares']
         if base_currency != x['currency']:
-            converted = c.convert(x['currency'], base_currency, value)
+            converted = value / currency_rates[x['currency']]
             total += converted
         else:
             total += value
-
     return total
 
 
 # returns the total fees paid in all trades
 # does conversion of currency to a defined base currency as well
-def get_total_fees(stocks_list, base_currency="USD"):
-    c = CurrencyRates()
-
+def get_total_fees(stocks_list, base_currency, currency_rates):
     total = 0
     for x in stocks_list:
         if base_currency != x['currency']:
-            converted = c.convert(x['currency'], base_currency, x['fees'])
+            converted = x['fees'] / currency_rates[x['currency']]
             total += converted
         else:
             total += x['fees']
-
     return total
 
 
-def get_summary_data(stocks_list, base_currency="SGD"):
+def get_summary_data(stocks_list, base_currency="USD"):
+    # get currency rates
+    currency_rates = get_rates(base_currency)
+
     # get currency symbol
     c = CurrencyCodes()
     currency_sym = c.get_symbol(base_currency)
 
     # calculate portfolio values
-    current_portfolio_value = get_current_value(stocks_list, base_currency)
-    original_portfolio_value = get_original_value(stocks_list, base_currency)
-    yest_portfolio_value = get_yest_value(stocks_list, base_currency)
-    total_fees = get_total_fees(stocks_list, base_currency)
+    current_portfolio_value = get_current_value(stocks_list, base_currency, currency_rates)
+    original_portfolio_value = get_original_value(stocks_list, base_currency, currency_rates)
+    yest_portfolio_value = get_yest_value(stocks_list, base_currency, currency_rates)
+    total_fees = get_total_fees(stocks_list, base_currency, currency_rates)
 
     # total change (including fees)
     total_change = current_portfolio_value-original_portfolio_value-total_fees
@@ -184,6 +210,8 @@ def stringify1(holdings_table):
 
 def stringify2(grouped_table):
     for stock in grouped_table:
+        stock['change']=f"{stock['change']:+,.02f}"
+        stock['change_p'] = f"{stock['change_p']:+,.02f}"
         stock['avgprice'] = f"{stock['avgprice']:,.02f}"
         stock['avgcost'] = f"{stock['avgcost']:,.02f}"
         stock['marketvalue'] = f"{stock['marketvalue']:,.02f}"
