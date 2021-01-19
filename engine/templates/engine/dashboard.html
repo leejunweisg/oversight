@@ -18,6 +18,7 @@
   <link rel="stylesheet" href={% static 'assets/vendors/flag-icon-css/css/flag-icon.min.css' %}>
   <link rel="stylesheet" href={% static 'assets/vendors/owl-carousel-2/owl.carousel.min.css' %}>
   <link rel="stylesheet" href={% static 'assets/vendors/owl-carousel-2/owl.theme.default.min.css' %}>
+  jquery.bootstrap.modal.forms.min.js.css
   <!-- End plugin css for this page -->
   <!-- inject:css -->
   <!-- endinject -->
@@ -34,8 +35,8 @@
       <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
         <a class="sidebar-brand brand-logo" href="{% url 'dashboard' %}"><img src={% static 'assets/images/logo.png' %}
             alt="logo" /></a>
-        <a class="sidebar-brand brand-logo-mini" href="{% url 'dashboard' %}"><img src={% static 'assets/images/logo-mini.png' %}
-            alt="logo" /></a>
+        <a class="sidebar-brand brand-logo-mini" href="{% url 'dashboard' %}"><img src={%
+            static 'assets/images/logo-mini.png' %} alt="logo" /></a>
       </div>
       <ul class="nav">
         <li class="nav-item profile">
@@ -66,8 +67,7 @@
         </li>
 
         <li class="nav-item menu-items">
-          <a class="nav-link"
-            href="#">
+          <a class="nav-link" href="#">
             <span class="menu-icon">
               <i class="mdi mdi-file-document-box"></i>
             </span>
@@ -129,9 +129,10 @@
 
           <!-- Print django flash messages -->
           {% if messages %}
-            {% for message in messages%}
-            <div class="alert alert-{{ message.tags }} grid-margin">{{ message }}<button type="button" class="close" data-dismiss="alert">&times;</button></div>
-            {% endfor %}
+          {% for message in messages%}
+          <div class="alert alert-{{ message.tags }} grid-margin">{{ message }}<button type="button" class="close"
+              data-dismiss="alert">&times;</button></div>
+          {% endfor %}
           {% endif %}
 
           <!-- First row - Portfolio value etc -->
@@ -199,7 +200,7 @@
 
 
           </div>
-          
+
           <!-- Second row - Holdings breakdown, historial portfolio value -->
           <div class="row">
             <div class="col-md-4 grid-margin stretch-card">
@@ -227,6 +228,24 @@
             </div>
           </div>
 
+          <!-- Modals -->
+          <!-- Modal 1 with id="create-book"-->
+          <div class="modal fade" id="create-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content"></div>
+            </div>
+          </div>
+
+          <!-- Modal 2 with id="modal" -->
+          <div class="modal fade" tabindex="-1" role="dialog" id="modal">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content"></div>
+            </div>
+          </div>
+
+          <!-- Create stock button -->
+          <button id="create-stock" class="btn btn-primary" type="button" name="button">Create stock</button>
+
           <!-- Holdings table -->
           <div class="row ">
             <div class="col-12 grid-margin">
@@ -236,18 +255,20 @@
                     <i class="mdi mdi-information-outline" data-toggle="tooltip" data-placement="top"
                       title="Prices displayed in the holding's base currency"></i>
 
-                        <button class="float-right btn btn-sm btn-dark dropdown-toggle" type="button" id="dropdownMenuButton-holdings" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" value="1">Sort</button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-holdings">
-                          <button class="dropdown-item holdings active" value="1">Symbol</button>
-                          <button class="dropdown-item holdings" value="2">Avg. Price</button>
-                          <button class="dropdown-item holdings" value="3">Avg. Cost</button>
-                          <button class="dropdown-item holdings" value="4">Market Value</button>
-                          <button class="dropdown-item holdings" value="5">Daily Gain</button>
-                          <button class="dropdown-item holdings" value="6">Total Gain</button>
-                        </div>
+                    <button class="float-right btn btn-sm btn-dark dropdown-toggle" type="button"
+                      id="dropdownMenuButton-holdings" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                      value="1">Sort</button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-holdings">
+                      <button class="dropdown-item holdings active" value="1">Symbol</button>
+                      <button class="dropdown-item holdings" value="2">Avg. Price</button>
+                      <button class="dropdown-item holdings" value="3">Avg. Cost</button>
+                      <button class="dropdown-item holdings" value="4">Market Value</button>
+                      <button class="dropdown-item holdings" value="5">Daily Gain</button>
+                      <button class="dropdown-item holdings" value="6">Total Gain</button>
+                    </div>
 
-                        <!-- Refresh button label shown when refreshing-->
-                        <div class="btn btn-sm btn-success float-right mr-3 px-2 py-2 show-refresh">Refreshing...</div>
+                    <!-- Refresh button label shown when refreshing-->
+                    <div class="btn btn-sm btn-success float-right mr-3 px-2 py-2 show-refresh">Refreshing...</div>
                   </h4>
 
                   <div class="table-responsive">
@@ -274,7 +295,9 @@
                       </thead>
                       <tbody id="holdings-table-body">
                         <!-- Will be populated via AJAX Jquery -->
-                        <tr><td class="text-danger" colspan="8">You have no holdings.</td></tr>
+                        <tr>
+                          <td class="text-danger" colspan="8">You have no holdings.</td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -292,19 +315,21 @@
                     <i class="mdi mdi-information-outline" data-toggle="tooltip" data-placement="top"
                       title="Prices displayed in holding's base currency"></i>
 
-                        <button class="float-right btn btn-sm btn-dark dropdown-toggle" type="button" id="dropdownMenuButton-lots" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" value="1">Sort</button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-lots">
-                          <button class="dropdown-item lots active" value="1">Trade Date</button>
-                          <button class="dropdown-item lots " value="2">Symbol</button>
-                          <button class="dropdown-item lots" value="3">Market Value</button>
-                          <button class="dropdown-item lots" value="4">Day's Gain</button>
-                          <button class="dropdown-item lots" value="5">Total Gain</button>
-                        </div>
+                    <button class="float-right btn btn-sm btn-dark dropdown-toggle" type="button"
+                      id="dropdownMenuButton-lots" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                      value="1">Sort</button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-lots">
+                      <button class="dropdown-item lots active" value="1">Trade Date</button>
+                      <button class="dropdown-item lots " value="2">Symbol</button>
+                      <button class="dropdown-item lots" value="3">Market Value</button>
+                      <button class="dropdown-item lots" value="4">Day's Gain</button>
+                      <button class="dropdown-item lots" value="5">Total Gain</button>
+                    </div>
 
-                        
 
-                        <!-- Refresh button label shown when refreshing-->
-                        <div class="btn btn-sm btn-success float-right mr-3 px-2 py-2 show-refresh">Refreshing...</div>
+
+                    <!-- Refresh button label shown when refreshing-->
+                    <div class="btn btn-sm btn-success float-right mr-3 px-2 py-2 show-refresh">Refreshing...</div>
 
                   </h4>
 
@@ -347,7 +372,9 @@
                       </thead>
                       <tbody id="stock-table-body">
                         <!-- Will be populated via AJAX Jquery -->
-                        <tr><td class="text-danger" colspan="8">You have no holdings.</td></tr>
+                        <tr>
+                          <td class="text-danger" colspan="8">You have no holdings.</td>
+                        </tr>
 
                       </tbody>
                     </table>
@@ -369,7 +396,7 @@
                 templates</a> from Bootstrapdash.com</span>
           </div>
         </footer>
-        
+
         <!-- partial -->
       </div>
       <!-- main-panel ends -->
@@ -396,6 +423,7 @@
   <!-- endinject -->
   <!-- Custom js for this page -->
   <script src={% static 'assets/js/dashboard.js' %}></script>
+  <script src={% static 'assets/js/jquery.bootstrap.modal.forms.min.js' %}></script>
   <!-- End custom js for this page -->
 
   <!-- AJAX -->
@@ -405,7 +433,7 @@
       setInterval(ajax_refresh, 10000); // ajax_refresh every 10 seconds
 
       // holdings
-      $(".dropdown-item.holdings").click(function(){
+      $(".dropdown-item.holdings").click(function () {
         console.log("clicked");
         // set value
         $("#dropdownMenuButton-holdings").text($(this).text());
@@ -420,7 +448,7 @@
 
 
       // lots
-      $(".dropdown-item.lots").click(function(){
+      $(".dropdown-item.lots").click(function () {
         console.log("clicked");
         // set value
         $("#dropdownMenuButton-lots").text($(this).text());
@@ -439,25 +467,34 @@
         return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
       }*/
 
+      function attach_modals(){
+          $(".bs-modal").each(function () {
+            $(this).modalForm({
+              formURL: $(this).data('form-url')
+            });
+          });
+      }
+
       function ajax_refresh() {
         $(".show-refresh").fadeIn();
         $.ajax({
           url: '{% url "dashboard-refresh" %}',
           type: 'get',
-          data: {'sort_holdings': $("#dropdownMenuButton-holdings").val(),
-          'sort_lots': $("#dropdownMenuButton-lots").val()
-        },
+          data: {
+            'sort_holdings': $("#dropdownMenuButton-holdings").val(),
+            'sort_lots': $("#dropdownMenuButton-lots").val()
+          },
           success: function (response) {
 
             // if user has no stocks, do nothing
-            if (response.empty==1){
+            if (response.empty == 1) {
               // clear loading
               $(".show-refresh").fadeOut();
               return;
             }
 
             // total gain percentages color, icon
-            if (response.total_change_p.indexOf("-") >= 0){
+            if (response.total_change_p.indexOf("-") >= 0) {
               $("#portfolio-value-p").removeClass("text-success");
               $("#portfolio-value-p").addClass("text-danger");
               $("#total-change-p").removeClass("text-success");
@@ -466,7 +503,7 @@
               $("#portfolio-value-icon").addClass("mdi-arrow-bottom-right text-danger");
               $("#total-change-icon").removeClass("mdi-arrow-top-right text-success");
               $("#total-change-icon").addClass("mdi-arrow-bottom-right text-danger");
-            }else{
+            } else {
               $("#portfolio-value-p").removeClass("text-danger");
               $("#portfolio-value-p").addClass("text-success");
               $("#total-change-p").removeClass("text-danger");
@@ -478,12 +515,12 @@
             }
 
             // day gain percentage color
-            if (response.day_change_p.indexOf("-") >= 0){
+            if (response.day_change_p.indexOf("-") >= 0) {
               $("#day-change-p").removeClass("text-success");
               $("#day-change-p").addClass("text-danger");
               $("#day-change-icon").removeClass("mdi-arrow-top-right text-success");
               $("#day-change-icon").addClass("mdi-arrow-bottom-right text-danger");
-            }else{
+            } else {
               $("#day-change-p").removeClass("text-danger");
               $("#day-change-p").addClass("text-success");
               $("#day-change-icon").removeClass("mdi-arrow-bottom-right text-danger");
@@ -511,11 +548,12 @@
             $.each(response.stocks_list, function (i, v) {
               var daily = (v.dailygain.indexOf("-") >= 0) ? "text-danger" : "text-success";
               var total = (v.totalgain.indexOf("-") >= 0) ? "text-danger" : "text-success";
-              $("#stock-table-body").append(`<tr class="text-light"><td> ${v.date} </td><td class="font-weight-bold"> ${v.symbol} </td><td> ${v.shares} </td><td> ${v.price} </td><td> ${v.fees} </td><td> ${v.avg} </td><td> ${v.marketvalue} </td><td class="${daily}"> ${v.dailygain} (${v.daily_p}%) </td><td class="${total}"> ${v.totalgain} (${v.total_p}%) </td><td><a class="btn badge badge-success" id="btn-edit" value="${v.id}" href="#">Edit</a> <a class="btn badge badge-danger" value="${v.id}" href="#">Delete</a></td></tr>`)
+              $("#stock-table-body").append(`<tr class="text-light"><td> ${v.date} </td><td class="font-weight-bold"> ${v.symbol} </td><td> ${v.shares} </td><td> ${v.price} </td><td> ${v.fees} </td><td> ${v.avg} </td><td> ${v.marketvalue} </td><td class="${daily}"> ${v.dailygain} (${v.daily_p}%) </td><td class="${total}"> ${v.totalgain} (${v.total_p}%) </td><td><a class="btn badge badge-success" id="btn-edit" value="${v.id}" href="#">Edit</a> <button class="bs-modal btn badge badge-danger" data-form-url="delete-stock/${v.id}/">Delete</button></td></tr>`)
             });
 
 
             // clear loading
+            attach_modals();
             $(".show-refresh").fadeOut();
           }
         });
@@ -533,6 +571,15 @@
     });
   </script>
 
+
+  <!-- Modal Forms JS -->
+  <script type="text/javascript">
+      // Create stock button opens form in modal with id="create-modal"
+      $("#create-stock").modalForm({ // button with id=create-stock
+        formURL: "{% url 'create-stock' %}",
+        modalID: "#create-modal" // the modal that holds the create form
+      });
+  </script>
 
 </body>
 

@@ -1,10 +1,16 @@
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.urls.base import reverse
 from pandas.core import base
 from .models import Stock
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .logic import parse_holdings, get_summary_data, stringify1, stringify2
 from datetime import datetime
+from bootstrap_modal_forms.generic import BSModalCreateView, BSModalDeleteView
+from .forms import StockModelForm
+from django.urls import reverse_lazy
+
 
 DEBUG = True
 def log(msg):
@@ -44,3 +50,29 @@ def dashboard_refresh(request):
 
         # return json response
         return JsonResponse(context, status=200, safe=False)
+
+class StockCreateView(LoginRequiredMixin, BSModalCreateView):
+    template_name = 'engine/create_stock.html'
+    form_class = StockModelForm
+    success_message = 'Success! The new holding has been added to your portfolio!'
+    success_url = reverse_lazy('dashboard')
+
+    def form_valid(self, form):
+        # set the owner to the current logged in user
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+
+class StockDeleteView(LoginRequiredMixin, UserPassesTestMixin, BSModalDeleteView):
+    model = Stock
+    template_name = 'engine/delete_stock.html'
+    success_message = 'Success: Stock was deleted.'
+    success_url = reverse_lazy('dashboard')
+
+    # ensure only author can delete his post
+    def test_func(self):
+        stock = self.get_object()
+        if self.request.user == stock.owner:
+            return True
+        else:
+            return False
