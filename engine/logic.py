@@ -233,3 +233,11 @@ def stringify2(grouped_table):
 def get_currency(ticker):
     stock = yf.Ticker(ticker)
     return stock.info['currency']
+
+def exist_ticker(ticker):
+    stock = yf.Ticker(ticker)
+    try:
+        stock.info['currency']
+        return True
+    except:
+        return False
