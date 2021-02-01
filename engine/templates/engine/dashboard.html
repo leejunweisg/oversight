@@ -18,7 +18,6 @@
   <link rel="stylesheet" href={% static 'assets/vendors/flag-icon-css/css/flag-icon.min.css' %}>
   <link rel="stylesheet" href={% static 'assets/vendors/owl-carousel-2/owl.carousel.min.css' %}>
   <link rel="stylesheet" href={% static 'assets/vendors/owl-carousel-2/owl.theme.default.min.css' %}>
-  jquery.bootstrap.modal.forms.min.js.css
   <!-- End plugin css for this page -->
   <!-- inject:css -->
   <!-- endinject -->
@@ -35,8 +34,7 @@
       <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
         <a class="sidebar-brand brand-logo" href="{% url 'dashboard' %}"><img src={% static 'assets/images/logo.png' %}
             alt="logo" /></a>
-        <a class="sidebar-brand brand-logo-mini" href="{% url 'dashboard' %}"><img src={%
-            static 'assets/images/logo-mini.png' %} alt="logo" /></a>
+        <a class="sidebar-brand brand-logo-mini" href="{% url 'dashboard' %}"><img src="{%static 'assets/images/logo-mini.png' %}" alt="logo"/></a>
       </div>
       <ul class="nav">
         <li class="nav-item profile">
@@ -81,7 +79,7 @@
       <!-- partial:partials/_navbar.html -->
       <nav class="navbar p-0 fixed-top d-flex flex-row">
         <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
-          <a class="navbar-brand brand-logo-mini" href="index.html"><img src={% static 'assets/images/logo-mini.svg' %}
+          <a class="navbar-brand brand-logo-mini" href="index.html"><img src={% static 'assets/images/logo-mini.png' %}
               alt="logo" /></a>
         </div>
         <div class="navbar-menu-wrapper flex-grow d-flex align-items-stretch">
@@ -157,7 +155,7 @@
                 </div>
               </div>
             </div>
-            <!-- Portfolio value 3 -->
+            <!-- Day's Gain 2 -->
             <div class="col-sm-4 grid-margin">
               <div class="card">
                 <div class="card-body">
@@ -177,7 +175,7 @@
                 </div>
               </div>
             </div>
-            <!-- Portfolio value 2 -->
+            <!-- Total Gain -->
             <div class="col-sm-4 grid-margin">
               <div class="card">
                 <div class="card-body">
@@ -197,8 +195,6 @@
                 </div>
               </div>
             </div>
-
-
           </div>
 
           <!-- Second row - Holdings breakdown, historial portfolio value -->
@@ -228,25 +224,21 @@
             </div>
           </div>
 
-          <!-- Modals -->
-          <!-- Modal 1 with id="create-book"-->
+          <!-- Modal (Create) -->
           <div class="modal fade" id="create-modal" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog">
               <div class="modal-content"></div>
             </div>
           </div>
 
-          <!-- Modal 2 with id="modal" -->
+          <!-- Modal (Update/Delete) -->
           <div class="modal fade" tabindex="-1" role="dialog" id="modal">
             <div class="modal-dialog" role="document">
               <div class="modal-content"></div>
             </div>
           </div>
 
-          <!-- Create stock button -->
-          <button id="create-stock" class="btn btn-primary" type="button" name="button">Create stock</button>
-
-          <!-- Holdings table -->
+          <!-- Grouped Holdings table -->
           <div class="row ">
             <div class="col-12 grid-margin">
               <div class="card">
@@ -295,9 +287,7 @@
                       </thead>
                       <tbody id="holdings-table-body">
                         <!-- Will be populated via AJAX Jquery -->
-                        <tr>
-                          <td class="text-danger" colspan="8">You have no holdings.</td>
-                        </tr>
+                        <tr><td class="text-danger" colspan="8">You have no holdings.</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -325,59 +315,40 @@
                       <button class="dropdown-item lots" value="4">Day's Gain</button>
                       <button class="dropdown-item lots" value="5">Total Gain</button>
                     </div>
-
-
-
                     <!-- Refresh button label shown when refreshing-->
                     <div class="btn btn-sm btn-success float-right mr-3 px-2 py-2 show-refresh">Refreshing...</div>
-
                   </h4>
-
-                  <!-- Group by symbol
-                  <div class="form-check form-check-muted mt-0 float-left">
-                    <label class="form-check-label font-weight-normal">
-                      <input type="checkbox" id="groupby-checkbox" class="form-check-input" checked="true">
-                    <i class="input-helper "></i>Group By Symbol</label>
-                  </div>-->
 
                   <div class="table-responsive">
                     <table class="table table-hover">
                       <thead>
                         <tr>
-                          <th>
-                            Trade Date
+                          <th>Trade Date</th>
+                          <th>Symbol</th>
+                          <th>Shares</th>
+                          <th>Price Executed
+                            <i class="mdi mdi-information-outline" data-toggle="tooltip" title="Price/share, excluding fees"></i>
                           </th>
-                          <th> Symbol </th>
-                          <th> Shares </th>
-                          <th>
-                            Price Executed
-                            <i class="mdi mdi-information-outline" data-toggle="tooltip" data-placement="top"
-                              title="Price/share, excluding fees"></i>
+                          <th>Fees
+                            <i class="mdi mdi-information-outline" data-toggle="tooltip" title="Total Fees (Commissions, exchange fees)"></i>
                           </th>
-                          <th>
-                            Fees
-                            <i class="mdi mdi-information-outline" data-toggle="tooltip" data-placement="top"
-                              title="Total Fees (Commissions, exchange fees)"></i>
+                          <th>Avg. cost/Share
+                            <i class="mdi mdi-information-outline" data-toggle="tooltip" title="Average cost/share, inclusive of fees"></i>
                           </th>
-                          <th>
-                            Avg. cost/Share
-                            <i class="mdi mdi-information-outline" data-toggle="tooltip" data-placement="top"
-                              title="Average cost/share, inclusive of fees"></i>
-                          </th>
-                          <th> Market Value </th>
-                          <th> Daily Gain </th>
-                          <th> Total Gain </th>
-                          <th> Actions </th>
+                          <th>Market Value</th>
+                          <th>Daily Gain</th>
+                          <th>Total Gain</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody id="stock-table-body">
                         <!-- Will be populated via AJAX Jquery -->
-                        <tr>
-                          <td class="text-danger" colspan="8">You have no holdings.</td>
-                        </tr>
-
+                        <tr><td class="text-danger" colspan="8">You have no holdings.</td></tr>
                       </tbody>
                     </table>
+                    <hr class="divider">
+                    <!-- Add new stock button -->
+                    <button id="create-stock" class="btn btn-success float-right" type="button" name="button">Add New</button>
                   </div>
                 </div>
               </div>
@@ -548,7 +519,7 @@
             $.each(response.stocks_list, function (i, v) {
               var daily = (v.dailygain.indexOf("-") >= 0) ? "text-danger" : "text-success";
               var total = (v.totalgain.indexOf("-") >= 0) ? "text-danger" : "text-success";
-              $("#stock-table-body").append(`<tr class="text-light"><td> ${v.date} </td><td class="font-weight-bold"> ${v.symbol} </td><td> ${v.shares} </td><td> ${v.price} </td><td> ${v.fees} </td><td> ${v.avg} </td><td> ${v.marketvalue} </td><td class="${daily}"> ${v.dailygain} (${v.daily_p}%) </td><td class="${total}"> ${v.totalgain} (${v.total_p}%) </td><td><a class="btn badge badge-success" id="btn-edit" value="${v.id}" href="#">Edit</a> <button class="bs-modal btn badge badge-danger" data-form-url="delete-stock/${v.id}/">Delete</button></td></tr>`)
+              $("#stock-table-body").append(`<tr class="text-light"><td> ${v.date} </td><td class="font-weight-bold"> ${v.symbol} </td><td> ${v.shares} </td><td> ${v.price} </td><td> ${v.fees} </td><td> ${v.avg} </td><td> ${v.marketvalue} </td><td class="${daily}"> ${v.dailygain} (${v.daily_p}%) </td><td class="${total}"> ${v.totalgain} (${v.total_p}%) </td><td><button class="bs-modal btn btn-success" data-form-url="update-stock/${v.id}/">Edit</button> <button class="bs-modal btn btn-danger" data-form-url="delete-stock/${v.id}/">Delete</button></td></tr>`)
             });
 
 
@@ -570,7 +541,6 @@
       $('[data-toggle="tooltip"]').tooltip();
     });
   </script>
-
 
   <!-- Modal Forms JS -->
   <script type="text/javascript">

@@ -8,9 +8,9 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', views.dashboard, name='dashboard'), # default home page
     path('dashboard-refresh/', views.dashboard_refresh, name='dashboard-refresh'), # for AJAX refresh
-    path('create-stock/', views.StockCreateView.as_view(), name='create-stock'),
-    path('delete-stock/<int:pk>/', views.StockDeleteView.as_view(), name='delete-stock'), 
-
+    path('create-stock/', views.StockCreateView.as_view(), name='create-stock'), # create stock
+    path('update-stock/<int:pk>/', views.StockUpdateView.as_view(), name='update-stock'), # update stock
+    path('delete-stock/<int:pk>/', views.StockDeleteView.as_view(), name='delete-stock'), # delete stock
 ]
 
 if settings.DEBUG:

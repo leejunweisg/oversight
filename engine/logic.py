@@ -1,6 +1,7 @@
 from forex_python.converter import CurrencyCodes
 import requests
 import pandas as pd
+import yfinance as yf
 
 DEBUG = True
 def log(msg):
@@ -54,7 +55,15 @@ def parse_holdings(portfolio, sort_holdings, sort_lots):
 
     # construct holdings dataframe
     holdings_df = pd.DataFrame(portfolio)
-    
+
+    # check for non-existent symbols, and remove
+    invalid = set()
+    for sym in symbols:
+        if sym not in price_df['symbol'].values:
+            print("Symbol(s) not found and ignored:", sym)
+            invalid.add(sym)
+    symbols = symbols.difference(invalid)
+
     # merge downloaded prices into holdings_df
     holdings_df = pd.merge(holdings_df, price_df, on='symbol')
     holdings_df['avg'] = (holdings_df['shares']*holdings_df['price']+holdings_df['fees'])/holdings_df['shares']
@@ -220,3 +229,7 @@ def stringify2(grouped_table):
         stock['totalgain'] = f"{stock['totalgain']:+,.02f}"
         stock['total_p'] = f"{stock['total_p']:+,.02f}"
     return grouped_table
+
+def get_currency(ticker):
+    stock = yf.Ticker(ticker)
+    return stock.info['currency']

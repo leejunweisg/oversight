@@ -5,9 +5,9 @@ from django.urls.base import reverse
 from pandas.core import base
 from .models import Stock
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .logic import parse_holdings, get_summary_data, stringify1, stringify2
+from .logic import parse_holdings, get_summary_data, stringify1, stringify2, get_currency
 from datetime import datetime
-from bootstrap_modal_forms.generic import BSModalCreateView, BSModalDeleteView
+from bootstrap_modal_forms.generic import BSModalCreateView, BSModalDeleteView, BSModalUpdateView
 from .forms import StockModelForm
 from django.urls import reverse_lazy
 
@@ -60,16 +60,32 @@ class StockCreateView(LoginRequiredMixin, BSModalCreateView):
     def form_valid(self, form):
         # set the owner to the current logged in user
         form.instance.owner = self.request.user
+        form.instance.currency = get_currency(form.instance.symbol)
         return super().form_valid(form)
 
 
 class StockDeleteView(LoginRequiredMixin, UserPassesTestMixin, BSModalDeleteView):
     model = Stock
     template_name = 'engine/delete_stock.html'
-    success_message = 'Success: Stock was deleted.'
+    success_message = 'Success: The lot has been deleted!'
     success_url = reverse_lazy('dashboard')
 
     # ensure only author can delete his post
+    def test_func(self):
+        stock = self.get_object()
+        if self.request.user == stock.owner:
+            return True
+        else:
+            return False
+
+class StockUpdateView(LoginRequiredMixin, UserPassesTestMixin, BSModalUpdateView):
+    model = Stock
+    template_name = 'engine/update_stock.html'
+    form_class = StockModelForm
+    success_message = 'Success: Your holdings has been updated!'
+    success_url = reverse_lazy('dashboard')
+
+    # ensure only author can update his post
     def test_func(self):
         stock = self.get_object()
         if self.request.user == stock.owner:
